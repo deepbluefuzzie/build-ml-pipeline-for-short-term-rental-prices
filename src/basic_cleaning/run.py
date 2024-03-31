@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 """
-Performs basic cleaning on the data and saves the results in Weights & Biases
+Performs basic cleaning on the data and save the results in Weights & Biases
 """
 import argparse
 import logging
 import wandb
-
 import pandas as pd
-
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
@@ -20,10 +18,17 @@ def go(args):
 
     # Download input artifact. This will also log that this script is using this
     # particular version of the artifact
+    # artifact_local_path = run.use_artifact(args.input_artifact).file()
+
+    ######################
+    # YOUR CODE HERE     #
+    ######################
+
     logger.info("Downloading artifact: %s", args.input_artifact)
     artifact_local_path = run.use_artifact(args.input_artifact).file()
 
     df = pd.read_csv(artifact_local_path)
+    logger.info(f"Cleaning artifact with min & max prices {args.min_price, args.max_price}")
 
     # Get min and max price
     min_price = args.min_price
@@ -33,6 +38,7 @@ def go(args):
     logger.info("Removing outliers")
     idx = df['price'].between(min_price, max_price)
     df = df[idx].copy()
+    
     # Convert last_review to datetime
     df['last_review'] = pd.to_datetime(df['last_review'])
 
@@ -41,7 +47,7 @@ def go(args):
     df = df[idx].copy()
 
     # Save clean dataset
-    df.to_csv('clean_sample.csv', index = False)
+    df.to_csv('clean.csv', index = False)
     artifact = wandb.Artifact(
         args.output_artifact,
         type=args.output_type,
@@ -50,7 +56,7 @@ def go(args):
 
     # Upload to wandb
     logger.info("Uploading artifact")
-    artifact.add_file('clean_sample.csv')
+    artifact.add_file('clean.csv')
     run.log_artifact(artifact)
 
     artifact.wait()
@@ -60,6 +66,28 @@ def go(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="This steps cleans the data")
+
+
+ #   parser.add_argument(
+ #       "--parameter1", 
+ #       type=## INSERT TYPE HERE: str, float or int,
+ #       help=## INSERT DESCRIPTION HERE,
+ #       required=True
+ #   )
+ #
+ #   parser.add_argument(
+ #       "--parameter2", 
+ #       type=## INSERT TYPE HERE: str, float or int,
+ #       help=## INSERT DESCRIPTION HERE,
+ #       required=True
+ #   )
+ #
+ #   parser.add_argument(
+ #       "--parameter3", 
+ #       type=## INSERT TYPE HERE: str, float or int,
+ #       help=## INSERT DESCRIPTION HERE,
+ #       required=True
+ #   )
 
 
     parser.add_argument(
@@ -103,7 +131,6 @@ if __name__ == "__main__":
         help="Max price",
         required=True
     )
-
 
     args = parser.parse_args()
 
